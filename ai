@@ -1,0 +1,185 @@
+import heapq
+from collections import deque
+import matplotlib.pyplot as plt
+import time
+
+# Step 1: Define the grid environment, start, and goal positions with varying costs
+grid = [
+    [0, 0, 1, 2, 0, 0, 1],
+    [0, 1, 0, 0, 0, 1, 0],
+    [0, 1, 0, 0, 2, 0, 0],
+    [0, 0, 0, 1, 0, 1, 0],
+    [1, 1, 2, 2, 0, 1, 0]
+]
+
+# Movement cost: Free space = 1, High-cost area = 5, Obstacles = None (represented as 1)
+movement_costs = {
+    0: 1,  # Free space cost
+    2: 5   # High-cost space
+}
+
+start_position = (0, 1)  # Starting position of the robot
+target_position = (0, 5)  # Target position for the robot to reach
+
+
+# Step 2: BFS Implementation (Shortest path in terms of steps, ignores cost)
+def bfs(grid, start, goal):
+    rows, cols = len(grid), len(grid[0])
+    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]  # Up, Down, Left, Right
+    queue = deque([(start, [start])])
+    visited = set()
+    visited.add(start)
+
+    while queue:
+        (current, path) = queue.popleft()
+
+        if current == goal:
+            return path  # Return the found path
+
+        for direction in directions:
+            next_row, next_col = current[0] + direction[0], current[1] + direction[1]
+            next_position = (next_row, next_col)
+
+            if 0 <= next_row < rows and 0 <= next_col < cols and grid[next_row][next_col] != 1 and next_position not in visited:
+                visited.add(next_position)
+                queue.append((next_position, path + [next_position]))
+
+    return None  # No path found
+
+
+# Step 3: DFS Implementation (Explores depth first)
+def dfs(grid, start, goal):
+    rows, cols = len(grid), len(grid[0])
+    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+    stack = [(start, [start])]
+    visited = set()
+    visited.add(start)
+
+    while stack:
+        (current, path) = stack.pop()
+
+        if current == goal:
+            return path  # Return the found path
+
+        for direction in directions:
+            next_row, next_col = current[0] + direction[0], current[1] + direction[1]
+            next_position = (next_row, next_col)
+
+            if 0 <= next_row < rows and 0 <= next_col < cols and grid[next_row][next_col] != 1 and next_position not in visited:
+                visited.add(next_position)
+                stack.append((next_position, path + [next_position]))
+
+    return None  # No path found
+
+
+# Step 4: UCS Implementation (Considers cost of each step)
+def ucs(grid, start, goal):
+    rows, cols = len(grid), len(grid[0])
+    directions = [(-1, 0), (1, 0), (0, -1), (0, 1)]
+    pq = [(0, start, [start])]  # (cost, position, path)
+    visited = set()
+
+    while pq:
+        (cost, current, path) = heapq.heappop(pq)
+
+        if current == goal:
+            return path  # Return the found path
+
+        if current in visited:
+            continue
+        visited.add(current)
+
+        for direction in directions:
+            next_row, next_col = current[0] + direction[0], current[1] + direction[1]
+            next_position = (next_row, next_col)
+
+            if 0 <= next_row < rows and 0 <= next_col < cols and grid[next_row][next_col] != 1 and next_position not in visited:
+                next_cost = cost + movement_costs[grid[next_row][next_col]]
+                heapq.heappush(pq, (next_cost, next_position, path + [next_position]))
+
+    return None  # No path found
+
+
+# Step 5: Visualization with animation in subplots
+def animate_movement(ax, grid, path, start=None, goal=None):
+    rows, cols = len(grid), len(grid[0])
+    ax.set_xticks(range(cols))
+    ax.set_yticks(range(rows))
+    ax.set_xticks([x - 0.5 for x in range(1, cols)], minor=True)
+    ax.set_yticks([y - 0.5 for y in range(1, rows)], minor=True)
+    ax.grid(which="minor")
+    ax.imshow(grid, cmap='Greys', origin='upper')
+
+    if start:
+        ax.add_patch(plt.Rectangle((start[1] - 0.5, start[0] - 0.5), 1, 1, fill=True, color="green", alpha=0.7))
+
+    if goal:
+        ax.add_patch(plt.Rectangle((goal[1] - 0.5, goal[0] - 0.5), 1, 1, fill=True, color="red", alpha=0.7))
+
+    robot = plt.Rectangle((start[1] - 0.5, start[0] - 0.5), 1, 1, fill=True, color="blue", alpha=0.7)
+    ax.add_patch(robot)
+
+    # Pause for setup
+    plt.pause(1)
+
+    # Move robot along the path, and highlight each cell it passes through
+    for step in path[1:]:
+        # Highlight the cell the agent just passed through
+        ax.add_patch(plt.Rectangle((step[1] - 0.5, step[0] - 0.5), 1, 1, fill=True, color="yellow", alpha=0.5))
+        robot.set_xy((step[1] - 0.5, step[0] - 0.5))
+        plt.pause(0.5)  # Pause to simulate movement
+
+
+# Step 6: Run searches, measure time, and animate results
+def run_searches_and_animate():
+    # BFS Execution
+    start_time = time.time()
+    path_bfs = bfs(grid, start_position, target_position)
+    bfs_time = time.time() - start_time
+    print(f"BFS Execution Time: {bfs_time:.6f} seconds")
+
+    # DFS Execution
+    start_time = time.time()
+    path_dfs = dfs(grid, start_position, target_position)
+    dfs_time = time.time() - start_time
+    print(f"DFS Execution Time: {dfs_time:.6f} seconds")
+
+    # UCS Execution
+    start_time = time.time()
+    path_ucs = ucs(grid, start_position, target_position)
+    ucs_time = time.time() - start_time
+    print(f"UCS Execution Time: {ucs_time:.6f} seconds")
+
+    # Set up the subplots
+    fig, axs = plt.subplots(1, 3, figsize=(15, 5))
+
+    # BFS Animation
+    if path_bfs:
+        axs[0].set_title(f"BFS Path (Steps) | Time: {bfs_time:.6f}s")
+        animate_movement(axs[0], grid, path_bfs, start=start_position, goal=target_position)
+    else:
+        axs[0].set_title("No BFS Path Found")
+
+    # DFS Animation
+    if path_dfs:
+        axs[1].set_title(f"DFS Path (Exploratory) | Time: {dfs_time:.6f}s")
+        animate_movement(axs[1], grid, path_dfs, start=start_position, goal=target_position)
+    else:
+        axs[1].set_title("No DFS Path Found")
+
+    # UCS Animation
+    if path_ucs:
+        axs[2].set_title(f"UCS Path (Cost-Optimal) | Time: {ucs_time:.6f}s")
+        animate_movement(axs[2], grid, path_ucs, start=start_position, goal=target_position)
+    else:
+        axs[2].set_title("No UCS Path Found")
+
+    plt.tight_layout()
+    plt.show()
+
+
+
+
+# Run the search and animation
+if _name_ == "_main_":
+    run_searches_and_animate()
