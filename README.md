@@ -18,7 +18,7 @@ DFS may quickly reach the goal but can get stuck in loops or find suboptimal pat
 UCS balances cost-effectiveness and pathfinding accuracy, particularly in grids with variable weights.
 Applications:These algorithms are foundational for autonomous robots, maze-solving, delivery drones, and other navigation systems. Understanding their strengths and limitations aids in selecting the right approach for specific tasks.
 
-Demo : Google drive:https://drive.google.com/file/d/1PnMZ1e0wkDQljnWdNUedKcM7e5S_DWq0/view?usp=drive_link
+Demo : https://drive.google.com/file/d/1PnMZ1e0wkDQljnWdNUedKcM7e5S_DWq0/view?usp=drive_link
 
 
 
